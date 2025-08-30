@@ -5,7 +5,10 @@ description = "Stochastic Terrain Navigator"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "kaleido>=1.0.0",
     "matplotlib>=3.10.6",
+    "noise>=1.2.2",
+    "plotly>=6.3.0",
     "seaborn>=0.13.2",
     "torch>=2.8.0",
 ]

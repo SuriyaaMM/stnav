@@ -8,3 +8,5 @@ wheels/
 
 # Virtual environments
 stnav/
+terrain_data/
+terrain_models/
