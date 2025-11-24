@@ -43,14 +43,15 @@ def clean_and_visualize_plotly():
         # --- 3. Generate Plots ---
         print("Generating Plotly figure...")
         fig = make_subplots(
-            rows=3, cols=2,
+            rows=4, cols=2,  # <-- CHANGED from 3 rows to 4
             subplot_titles=(
                 'Agent Performance: Average Reward',
                 "Critic's Prediction: Average State Value",
                 'Exploration: Policy Entropy',
                 'Training Stability: Total Loss',
                 'Loss Components',
-                'Policy Update Magnitude'
+                'Policy Update Magnitude',
+                'Optimizer Gradient Norm'  # <-- NEW PLOT TITLE
             )
         )
 
@@ -80,10 +81,19 @@ def clean_and_visualize_plotly():
         fig.add_trace(go.Scatter(x=ppo_df.index, y=ppo_df['ratios'], mode='lines', name='Mean Ratio', line=dict(color='cyan')), row=3, col=2)
         fig.add_hline(y=1.0 + CLIP_COEFF, line_dash="dash", line_color="black", annotation_text=f"Upper Clip ({1.0 + CLIP_COEFF})", row=3, col=2)
         fig.add_hline(y=1.0 - CLIP_COEFF, line_dash="dash", line_color="black", annotation_text=f"Lower Clip ({1.0 - CLIP_COEFF})", row=3, col=2)
+        
+        # --- NEW PLOT 7: Gradient Norm ---
+        if 'grad_norm_hist' in ppo_df.columns:
+            fig.add_trace(go.Scatter(x=ppo_df.index, y=ppo_df['grad_norm_hist'], mode='lines', name='Gradient Norm', line=dict(color='darkorange', width=1), opacity=0.8), row=4, col=1)
+            if not ppo_df['grad_norm_hist'].empty:
+                smoothed_grad_norm = ppo_df['grad_norm_hist'].rolling(window=10, min_periods=1).mean()
+                fig.add_trace(go.Scatter(x=smoothed_grad_norm.index, y=smoothed_grad_norm, mode='lines', name='Smoothed Grad Norm', line=dict(color='orangered', dash='dash')), row=4, col=1)
+        else:
+            print("Warning: 'grad_norm_hist' column not found in ppo_df.csv. Skipping Gradient Norm plot.")
 
         # --- 4. Update Layout and Save ---
         fig.update_layout(
-            height=1200, width=1200,
+            height=1600, width=1200,  # <-- CHANGED height from 1200 to 1600
             title_text="PPO Training Analysis",
             template='plotly_white',
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
@@ -94,9 +104,10 @@ def clean_and_visualize_plotly():
         fig.update_xaxes(title_text="PPO Update Step", row=2, col=2)
         fig.update_xaxes(title_text="PPO Update Step", row=3, col=1)
         fig.update_xaxes(title_text="PPO Update Step", row=3, col=2)
+        fig.update_xaxes(title_text="PPO Update Step", row=4, col=1) # <-- NEW X-AXIS
 
         fig.write_html(OUTPUT_FILE)
-        fig.write_image(IMAGE_OUTPUT_FILE, scale=1, format="svg", width=1200, height=1200)
+        fig.write_image(IMAGE_OUTPUT_FILE, scale=1, format="svg", width=1200, height=1600) # <-- CHANGED height
         print(f"✅ Successfully generated interactive plot and saved to {OUTPUT_FILE}")
         # To open the plot directly in your browser, uncomment the following line:
         # fig.show()

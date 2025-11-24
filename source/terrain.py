@@ -48,13 +48,13 @@ class Terrain(object):
     def __init__(
         self,
         shape: Tuple[int, int] = (12, 12),
-        initial_fuel: int = 60, 
-        fuel_exhaustion_rate: float = 0.25,
+        initial_fuel: int = 50, 
+        fuel_exhaustion_rate: float = 0.20,
         num_goals: int = 5,
         scale: float = 125.0, 
-        octaves: int = 6, 
+        octaves: int = 5, 
         persistence: float = 1.0, 
-        lacunarity: float = 4.5, 
+        lacunarity: float = 12.5, 
         seed: int = 69
     ):  
         self.gpu = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -123,7 +123,7 @@ class Terrain(object):
     def _action_helper(
         self,
         current_elevation: torch.Tensor,
-        potential_based_reward: bool = False,
+        potential_based_reward: bool = True,
     ) -> Tuple[float, float]:
         """
         Description
@@ -147,12 +147,14 @@ class Terrain(object):
         # additional positive rewards 
         is_at_goal = (self.agent_position == self.goals).all(dim=1)
         if is_at_goal.any():
-            goal_idx = int(is_at_goal.nonzero(as_tuple=True)[0].item())
+            goal_indices = is_at_goal.nonzero(as_tuple=True)[0]
+            for goal_idx in goal_indices:
+                goal_idx = int(goal_idx.item())
 
-            if not self.visited_goals[goal_idx]:
-                points += 1.0
-                self.visited_goals[goal_idx] = True
-                reward += 19.0
+                if not self.visited_goals[goal_idx]:
+                    points += 2.5
+                    self.visited_goals[goal_idx] = True
+                    reward += 2.5
 
         # potential based reward
         if potential_based_reward:
@@ -163,7 +165,7 @@ class Terrain(object):
                 current_distance_to_goal = torch.min(distances_to_goals)
 
                 distance_delta = self.previous_distance_to_goal - current_distance_to_goal
-                reward += 0.2 * distance_delta.item() 
+                reward += 1.5 * distance_delta.item() 
 
                 self.previous_distance_to_goal = current_distance_to_goal
         
@@ -198,7 +200,8 @@ class Terrain(object):
         """
 
         # constructs the fuel channel
-        fuel_map = torch.ones_like(self.terrain) * self.fuel.item()
+        #fuel_map = torch.ones_like(self.terrain) * self.fuel.item()
+        fuel_map = torch.ones_like(self.terrain) * (self.fuel.item() / self.initial_fuel)
         # modifies the agent channel        
         self.agent_map[previous_agent_position[0], previous_agent_position[1]] = 0.0
         self.agent_map[self.agent_position[0], self.agent_position[1]] = self.points.item() 
@@ -232,13 +235,13 @@ class Terrain(object):
 
         # invalid action
         if action not in self.actions:
-            reward -= 10.0
+            reward -= 1.0
             print("Returning Due to Wrong Action!")
             return self.get_state(self.agent_position), reward, done, info
         # fuel exhausted
         if self.fuel <= 0:
             done = True
-            reward -= 2.5
+            reward -= 0.5
             return self.get_state(self.agent_position), reward, done, info
         # valid actions
         if action == 0:  # move up
@@ -254,7 +257,7 @@ class Terrain(object):
         reward_value, points = self._action_helper(current_elevation)
 
         # we have reached the maximum number of goals we can acheive
-        if(int(points) == self.num_goals):
+        if self.visited_goals.all():
             done = True
         
         reward += reward_value

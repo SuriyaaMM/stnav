@@ -1,20 +1,20 @@
 import torch
 from terrain import Terrain
-from network import ActorCriticNetwork, train
+from network import ActorCriticNetwork, train, train_lbfgs
 
 terrain = Terrain()
 # terrain.render()
 print(terrain.get_state_shape())
 terrain.render()
 
-TRAIN_ITERATIONS = 16
-REPLAY_ITERATIONS = 16
-MAX_REPLAY_ITERATIONS = 2500
-PPO_EPOCHS = 4
+TRAIN_ITERATIONS = 25
+REPLAY_ITERATIONS = 50
+MAX_REPLAY_ITERATIONS = 2500 
+PPO_EPOCHS = 6
 GAMMA = 0.99
 LAMBDA = 0.98
 CLIP_COEFF = 0.2
-VALUE_LOSS_COEFF = 0.50
+VALUE_LOSS_COEFF = 0.25
 ENTROPY_INITIAL = 0.15
 ENTROPY_MIN = 0.01
 
@@ -24,7 +24,7 @@ def lr_lambda(update_step):
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 model = ActorCriticNetwork(terrain.get_state_shape(), num_actions=len(terrain.actions)).to(device)
-optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
 scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
 replay_df, ppo_df = train(
     terrain,
