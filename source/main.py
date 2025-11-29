@@ -2,7 +2,7 @@ import torch
 from terrain import Terrain
 from network import ActorCriticNetwork, train, train_lbfgs
 
-terrain = Terrain()
+terrain = Terrain(seed=145)
 # terrain.render()
 print(terrain.get_state_shape())
 terrain.render()
@@ -24,7 +24,7 @@ def lr_lambda(update_step):
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 model = ActorCriticNetwork(terrain.get_state_shape(), num_actions=len(terrain.actions)).to(device)
-optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lr_lambda)
 replay_df, ppo_df = train(
     terrain,
