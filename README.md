@@ -1,7 +1,7 @@
 # Stochastic Terrain Navigation 
 
-- [Report](./reports/stnav_technical_report.pdf)
-- [Presentation](./reports/stnav_presentation.pdf)
+- [Report](https://drive.google.com/file/d/1FyyjkzVSOa2cgWviEIf26DHMxtExphgT/view?usp=drive_link)
+- [Presentation](https://drive.google.com/file/d/1MXUi-ZBa2ZudCtf3BXmmlygT_fI-jVis/view?usp=drive_link)
 
 ## Project Structure
 ```
