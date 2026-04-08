@@ -151,6 +151,11 @@ class ActorCriticNetwork(nn.Module):
     1. Decoupled Architecture: Separate encoders for Actor and Critic to prevent interference.
     2. Orthogonal Initialization: Prevents vanishing/exploding gradients at the start.
     """
+
+    def __init__(
+        self,
+        state_shape: Tuple[int, int, int],
+        num_actions: int
     ):
         super().__init__()
         self.device_gpu = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
